@@ -5,7 +5,9 @@
 # Change Log: (Who, When, What)
 #   RRoot,1/1/2030,Created Script
 #   MClark,8/11/2024,Created Person class
-#   MClark,8/12/2024,
+#   MClark,8/12/2024,Added functions
+#   MClark,8/16/2024,Fixed reading and writing to file
+#   MClark,8/12/2024,Fixed another read file issue, added format changes
 # ------------------------------------------------------------------------------------------ #
 import json
 
@@ -21,7 +23,7 @@ MENU: str = '''
 '''
 FILE_NAME: str = "Enrollments.json"
 
-
+# Data --------------------------------------- #
 class Person:
     """
     A class representing person data.
@@ -157,17 +159,17 @@ class FileProcessor:
         try:
             file = open(file_name, "r")
             file_dict = json.load(file)
-
-            for row in file_dict:
-                student_data.append(Student(row["FirstName"],
-                                            row["LastName"],
-                                            row["CourseName"]))
             file.close()
         except Exception as e:
             IO.output_error_messages(message="Error: There was a problem with reading the file.", error=e)
         finally:
             if file is not None and not file.closed:
                 file.close()
+        for row in file_dict:
+            student_data.append(Student(row["FirstName"],
+                                        row["LastName"],
+                                        row["CourseName"])
+                                )
         return student_data
 
     @staticmethod
@@ -186,13 +188,15 @@ class FileProcessor:
         for student in student_data:
             file_dict.append({"FirstName": student.first_name,
                               "LastName": student.last_name,
-                              "CourseName": student.course_name})
+                              "CourseName": student.course_name}
+                             )
         file = None
         try:
 
             file = open(file_name, "w")
             json.dump(file_dict, file, indent=1)
             file.close()
+            print("The following students have been registered:\n")
             IO.output_student_and_course_names(student_data=student_data)
         except Exception as e:
             message = "Error: There was a problem with writing to the file.\n"
@@ -257,9 +261,9 @@ class IO:
         """
         choice = "0"
         try:
-            choice = input("Enter your menu choice number: ")
+            choice = input("Enter your menu choice number: ").strip()
             if choice not in ("1", "2", "3", "4"):  # Note these are strings
-                raise Exception("Please choose 1, 2, 3, or 4")
+                raise Exception("Please choose \033[1m1\033[0m, \033[1m2\033[0m, \033[1m3\033[0m, or \033[1m4\033[0m")
         except Exception as e:
             IO.output_error_messages(e.__str__())  # Not passing e to avoid the technical message
 
@@ -312,7 +316,7 @@ class IO:
 
 
 # Define the Data Variables
-students: list = [Student]  # a table of student data
+students: list[Student] = []  # a table of student data
 menu_choice: str  # Hold the choice made by the user.
 
 # Start of main body
